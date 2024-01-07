@@ -1,4 +1,4 @@
-function calculatePiAndDraw(
+function calculatePiWithDrawing(
   rectangleX,
   rectangleY,
   rectangleWidth,
@@ -7,34 +7,41 @@ function calculatePiAndDraw(
   circleY,
   circleRadius
 ) {
+  let calculatedPi = 0;
+  const imgDataArr = [];
   const PI_TO_CALCULATE = `${Math.PI}`.slice(0, 7);
   let dotsInCircle = 0;
   let dotsInSquare = 0;
+
   // fill rectangle with dots starting from top left corner till bottom right corner
-  let calPi = 0;
   for (let y = rectangleY; y < rectangleY + rectangleHeight; y++) {
     for (let x = rectangleX; x < rectangleX + rectangleWidth; x++) {
-      // Draw dot
-      ctx.beginPath();
-      ctx.arc(x, y, 1, 0, Math.PI);
+      const i = dotsInSquare * 4;
 
       if (isPointInCircle(x, y, circleX, circleY, circleRadius)) {
         dotsInCircle++;
-        ctx.fillStyle = "red";
+
+        imgDataArr[i + 0] = 255;
+        imgDataArr[i + 1] = 0;
+        imgDataArr[i + 2] = 0;
       } else {
-        ctx.fillStyle = "blue";
+        imgDataArr[i + 0] = 0;
+        imgDataArr[i + 1] = 0;
+        imgDataArr[i + 2] = 255;
       }
-      ctx.fill();
+      imgDataArr[i + 3] = 255;
 
       dotsInSquare++;
-      calPi = (4 * dotsInCircle) / dotsInSquare;
+      calculatedPi = (4 * dotsInCircle) / dotsInSquare;
     }
   }
 
   console.log(
-    `It took ${dotsInSquare} iterations to calculate ${`${calPi}`.slice(
+    `It took ${dotsInSquare} iterations to calculate ${`${calculatedPi}`.slice(
       0,
       7
     )}, actual PI is ${PI_TO_CALCULATE}`
   );
+
+  return imgDataArr;
 }

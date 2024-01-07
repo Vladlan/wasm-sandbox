@@ -1,6 +1,7 @@
 const canvas = document.getElementById("myCanvas");
+const canvas2 = document.getElementById("myCanvas2");
 const ctx = canvas.getContext("2d");
-
+const ctx2 = canvas2.getContext("2d");
 
 // Draw a rectangle
 const rectangleX = 150;
@@ -15,12 +16,28 @@ const circleRadius = Math.min(rectangleWidth, rectangleHeight) / 2;
 drawCircle(circleX, circleY, circleRadius);
 
 const startTime = performance.now();
-calculatePi(
+calculatePiAndDraw(
   rectangleX,
   rectangleY,
   rectangleWidth,
   rectangleHeight,
+  circleX,
+  circleY,
+  circleRadius
 );
+const imgDataArr = calculatePiWithDrawing(
+  rectangleX,
+  rectangleY,
+  rectangleWidth,
+  rectangleHeight,
+  circleX,
+  circleY,
+  circleRadius
+);
+
+const imgData = ctx2.createImageData(rectangleHeight, rectangleWidth);
+imgData.data.set(imgDataArr);
+ctx2.putImageData(imgData, rectangleX, rectangleY);
 const endTime = performance.now();
 const elapsedTime = endTime - startTime;
 
