@@ -49,6 +49,7 @@ impl Snake {
 #[wasm_bindgen]
 pub struct World {
     width: usize,
+    size: usize,
     snake: Snake
 }
 
@@ -57,6 +58,7 @@ impl World {
     pub fn new(width: usize, snake_start_index: usize) -> World {
         World {
             width,
+            size: width * width,
             snake: Snake::new(snake_start_index)
         }
     }
@@ -68,5 +70,11 @@ impl World {
 
     pub fn snake_head_index(&self) -> usize {
         self.snake.body[0].0
+    }
+
+    pub fn update(&mut self) {
+        let snake_index = self.snake_head_index();
+        self.snake.body[0].0 = (snake_index + 1) % self.size;
+
     }
 }

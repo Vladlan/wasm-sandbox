@@ -1,6 +1,6 @@
 import init, { greet, World } from "snake_game";
 
-init().then(_ => {
+init().then((_) => {
   // greet("V1234");
 
   const CELL_SIZE = 30;
@@ -8,11 +8,10 @@ init().then(_ => {
 
   const world = World.new(16, 36);
   const worldWidth = world.width();
-  console.log('world: ', world.width());
+  console.log("world: ", world.width());
 
-  const canvas = document.getElementById('snake-canvas');
-  const ctx = canvas.getContext('2d');
-
+  const canvas = document.getElementById("snake-canvas");
+  const ctx = canvas.getContext("2d");
 
   canvas.height = worldWidth * CELL_SIZE;
   canvas.width = worldWidth * CELL_SIZE;
@@ -32,16 +31,28 @@ init().then(_ => {
     ctx.stroke();
   }
 
-  drawWorld()
-  function  drawSnake() {
+  function drawSnake() {
     const snakeIndex = world.snake_head_index();
     const col = snakeIndex % worldWidth;
     const row = Math.floor(snakeIndex / worldWidth);
-    
+
     ctx.beginPath();
     ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     ctx.stroke();
   }
 
-  drawSnake();
-})
+  function paint() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawWorld();
+    drawSnake();
+  }
+
+  function gameLoop() {
+    setTimeout(() => {
+      world.update();
+      paint();
+      requestAnimationFrame(gameLoop);
+    }, 100);
+  }
+  gameLoop();
+});
