@@ -54,10 +54,10 @@ pub struct World {
 
 #[wasm_bindgen]
 impl World {
-    pub fn new(width: usize) -> World {
+    pub fn new(width: usize, snake_start_index: usize) -> World {
         World {
             width,
-            snake: Snake::new(10)
+            snake: Snake::new(snake_start_index)
         }
     }
 
