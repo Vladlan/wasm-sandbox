@@ -31,20 +31,42 @@ extern {
 // to rebuild code run: (note you will have to restart web server to see changes)
 // wasm-pack build --target web 
 
+
+struct SnakeCell(usize);
+
+
+struct Snake {
+    body: Vec<SnakeCell>
+}
+
+impl Snake {
+    fn new(start_index: usize) -> Snake {
+        Snake {
+            body: vec![SnakeCell(start_index)]
+        }
+    }
+}
 #[wasm_bindgen]
 pub struct World {
-    width: usize
+    width: usize,
+    snake: Snake
 }
 
 #[wasm_bindgen]
 impl World {
     pub fn new(width: usize) -> World {
         World {
-            width
+            width,
+            snake: Snake::new(10)
         }
     }
 
     pub fn width(&self) -> usize {
         self.width
+    }
+
+
+    pub fn snake_head_index(&self) -> usize {
+        self.snake.body[0].0
     }
 }
