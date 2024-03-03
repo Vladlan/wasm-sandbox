@@ -5,6 +5,16 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 
 #[wasm_bindgen]
+#[derive(PartialEq)]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right
+}
+
+
+#[wasm_bindgen]
 pub fn greet(name: &str) {
     let name = format!("name: {}", name);
     alert(&name);
@@ -36,13 +46,15 @@ struct SnakeCell(usize);
 
 
 struct Snake {
-    body: Vec<SnakeCell>
+    body: Vec<SnakeCell>,
+    direction: Direction,
 }
 
 impl Snake {
     fn new(start_index: usize) -> Snake {
         Snake {
-            body: vec![SnakeCell(start_index)]
+            body: vec![SnakeCell(start_index)],
+            direction: Direction::Down,
         }
     }
 }
@@ -67,6 +79,10 @@ impl World {
         self.width
     }
 
+    pub fn change_snake_dir(&mut self, direction: Direction) {
+        self.snake.direction = direction;
+    }
+
 
     pub fn snake_head_index(&self) -> usize {
         self.snake.body[0].0
@@ -74,6 +90,30 @@ impl World {
 
     pub fn update(&mut self) {
         let snake_index = self.snake_head_index();
+        let row = snake_index / self.width;
+        let col = snake_index % self.width;
+
+
+        if self.snake.direction == Direction::Up {
+            let next_row = (row - 1) * self.width;
+            self.snake.body[0].0 = (next_row * self.width) + col;
+        }
+        
+        if self.snake.direction == Direction::Down {
+            let next_row = (row + 1) * self.width;
+            self.snake.body[0].0 = (next_row * self.width) + col;
+        }
+
+        if self.snake.direction == Direction::Left {
+            let next_col = col - 1;
+            self.snake.body[0].0 = (row * self.width) + next_col;
+        }
+
+        if self.snake.direction == Direction::Right {
+            let next_col = col + 1;
+            self.snake.body[0].0 = (row * self.width) + next_col;
+        }
+
         self.snake.body[0].0 = (snake_index + 1) % self.size;
 
     }
