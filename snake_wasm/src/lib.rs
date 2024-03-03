@@ -3,16 +3,14 @@ use wasm_bindgen::prelude::*;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-
 #[wasm_bindgen]
 #[derive(PartialEq)]
 pub enum Direction {
     Up,
     Down,
     Left,
-    Right
+    Right,
 }
-
 
 #[wasm_bindgen]
 pub fn greet(name: &str) {
@@ -23,13 +21,13 @@ pub fn greet(name: &str) {
 }
 
 #[wasm_bindgen]
-extern {
-   pub fn alert(name: &str);
+extern "C" {
+    pub fn alert(name: &str);
 }
 
 // the same for console.log
 #[wasm_bindgen(js_namespace = console)]
-extern {
+extern "C" {
     #[wasm_bindgen(js_name = log)]
     pub fn log(s: &str);
 
@@ -39,11 +37,9 @@ extern {
 }
 
 // to rebuild code run: (note you will have to restart web server to see changes)
-// wasm-pack build --target web 
-
+// wasm-pack build --target web
 
 struct SnakeCell(usize);
-
 
 struct Snake {
     body: Vec<SnakeCell>,
@@ -62,7 +58,7 @@ impl Snake {
 pub struct World {
     width: usize,
     size: usize,
-    snake: Snake
+    snake: Snake,
 }
 
 #[wasm_bindgen]
@@ -71,7 +67,7 @@ impl World {
         World {
             width,
             size: width * width,
-            snake: Snake::new(snake_start_index)
+            snake: Snake::new(snake_start_index),
         }
     }
 
@@ -83,38 +79,33 @@ impl World {
         self.snake.direction = direction;
     }
 
-
     pub fn snake_head_index(&self) -> usize {
         self.snake.body[0].0
     }
 
     pub fn update(&mut self) {
         let snake_index = self.snake_head_index();
-        let row = snake_index / self.width;
-        let col = snake_index % self.width;
+        let (row, col) = self.index_to_cell(snake_index);
+        let (row, col) = match self.snake.direction {
+            Direction::Up => {((row - 1) % self.width, col)},
+            Direction::Down => {((row + 1) % self.width, col)},
+            Direction::Left => {(row, (col - 1) % self.width)},
+            Direction::Right => {(row, (col + 1) % self.width)},
+        };
 
+        let next_idx = self.cell_to_index(row, col);
+        self.set_snake_head(next_idx)
+    }
 
-        if self.snake.direction == Direction::Up {
-            let next_row = (row - 1) * self.width;
-            self.snake.body[0].0 = (next_row * self.width) + col;
-        }
-        
-        if self.snake.direction == Direction::Down {
-            let next_row = (row + 1) * self.width;
-            self.snake.body[0].0 = (next_row * self.width) + col;
-        }
+    fn set_snake_head(&mut self, idx: usize) {
+        self.snake.body[0].0 = idx;
+    }
 
-        if self.snake.direction == Direction::Left {
-            let next_col = col - 1;
-            self.snake.body[0].0 = (row * self.width) + next_col;
-        }
+    fn index_to_cell(&self, idx: usize) -> (usize, usize) {
+        (idx / self.width, idx % self.width)
+    }
 
-        if self.snake.direction == Direction::Right {
-            let next_col = col + 1;
-            self.snake.body[0].0 = (row * self.width) + next_col;
-        }
-
-        self.snake.body[0].0 = (snake_index + 1) % self.size;
-
+    fn cell_to_index(&self, row: usize, col: usize) -> usize {
+        (row * self.width) + col
     }
 }
