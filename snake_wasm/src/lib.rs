@@ -36,10 +36,8 @@ extern "C" {
     pub fn error(s: &str);
 }
 
-// to rebuild code run: (note you will have to restart web server to see changes)
-// wasm-pack build --target web
-
-struct SnakeCell(usize);
+#[derive(Clone)]
+pub struct SnakeCell(usize);
 
 struct Snake {
     body: Vec<SnakeCell>,
@@ -47,10 +45,16 @@ struct Snake {
 }
 
 impl Snake {
-    fn new(start_index: usize) -> Snake {
+    fn new(start_index: usize, size: usize) -> Snake {
+        let mut body = vec!();
+
+        for i in 0..size { 
+            body.push(SnakeCell(start_index - i))
+        }
+
         Snake {
-            body: vec![SnakeCell(start_index)],
-            direction: Direction::Down,
+            body,
+            direction: Direction::Right,
         }
     }
 }
@@ -67,7 +71,7 @@ impl World {
         World {
             width,
             size: width * width,
-            snake: Snake::new(snake_start_index),
+            snake: Snake::new(snake_start_index, 3),
         }
     }
 
@@ -75,7 +79,13 @@ impl World {
         self.width
     }
 
+    pub fn snake_head_idx(&self) -> usize {
+        self.snake.body[0].0
+     }
+
     pub fn change_snake_dir(&mut self, direction: Direction) {
+        let next_cell = self.gen_next_snake_cell(&direction);
+        if self.snake.body[1].0 == next_cell.0 { return; }
         self.snake.direction = direction;
     }
 
@@ -83,18 +93,65 @@ impl World {
         self.snake.body[0].0
     }
 
-    pub fn update(&mut self) {
-        let snake_index = self.snake_head_index();
-        let (row, col) = self.index_to_cell(snake_index);
-        let (row, col) = match self.snake.direction {
-            Direction::Up => {((row - 1) % self.width, col)},
-            Direction::Down => {((row + 1) % self.width, col)},
-            Direction::Left => {(row, (col - 1) % self.width)},
-            Direction::Right => {(row, (col + 1) % self.width)},
-        };
+    pub fn snake_length(&self) -> usize {
+        self.snake.body.len()
+    }
 
-        let next_idx = self.cell_to_index(row, col);
-        self.set_snake_head(next_idx)
+    // memory raw pointer (*const) to snake cells
+    pub fn snake_cells(&self) -> *const SnakeCell {
+        self.snake.body.as_ptr() 
+    }
+
+    pub fn step(&mut self) {
+        let temp = self.snake.body.clone();
+        let next_cell = self.gen_next_snake_cell(&self.snake.direction);
+        self.snake.body[0] = next_cell;
+
+        let len = self.snake.body.len();
+
+        for i in 1..len {
+            self.snake.body[i] = SnakeCell(temp[i - 1].0);
+        }
+    }
+
+    fn gen_next_snake_cell(&self, direction: &Direction) -> SnakeCell {
+        let snake_idx = self.snake_head_idx();
+        let row = snake_idx / self.width;
+
+        return match direction {
+            Direction::Right => {
+                let treshold = (row + 1) * self.width;
+                if snake_idx + 1 == treshold {
+                    SnakeCell(treshold - self.width)
+                } else {
+                    SnakeCell(snake_idx + 1)
+                }
+            },
+            Direction::Left => {
+                let treshold = row * self.width;
+                if snake_idx == treshold {
+                    SnakeCell(treshold + (self.width - 1))
+                } else {
+                    SnakeCell(snake_idx - 1)
+                }
+            },
+            Direction::Up => {
+                let treshold = snake_idx - (row * self.width);
+                if snake_idx == treshold {
+                    SnakeCell((self.size - self.width) + treshold)
+                } else {
+                    SnakeCell(snake_idx - self.width)
+                }
+            },
+            Direction::Down => {
+                let treshold = snake_idx + ((self.width - row) * self.width);
+                if snake_idx + self.width == treshold {
+                    SnakeCell(treshold - ((row + 1) * self.width))
+                } else {
+                    SnakeCell(snake_idx + self.width)
+                }
+            },
+        };
     }
 
     fn set_snake_head(&mut self, idx: usize) {
@@ -109,3 +166,8 @@ impl World {
         (row * self.width) + col
     }
 }
+
+
+
+// to rebuild code run: (note you will have to restart web server to see changes)
+// wasm-pack build --target web
