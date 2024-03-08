@@ -117,38 +117,40 @@ impl World {
     fn gen_next_snake_cell(&self, direction: &Direction) -> SnakeCell {
         let snake_idx = self.snake_head_idx();
         let row = snake_idx / self.width;
+        let world_height = self.width;
+        let world_width = self.width;
 
         return match direction {
             Direction::Right => {
-                let treshold = (row + 1) * self.width;
+                let treshold = (row + 1) * world_width;
                 if snake_idx + 1 == treshold {
-                    SnakeCell(treshold - self.width)
+                    SnakeCell(treshold - world_width)
                 } else {
                     SnakeCell(snake_idx + 1)
                 }
             },
             Direction::Left => {
-                let treshold = row * self.width;
+                let treshold = row * world_width;
                 if snake_idx == treshold {
-                    SnakeCell(treshold + (self.width - 1))
+                    SnakeCell(treshold + (world_width - 1))
                 } else {
                     SnakeCell(snake_idx - 1)
                 }
             },
             Direction::Up => {
-                let treshold = snake_idx - (row * self.width);
+                let treshold = snake_idx - (row * world_height);
                 if snake_idx == treshold {
-                    SnakeCell((self.size - self.width) + treshold)
+                    SnakeCell((self.size - world_height) + treshold)
                 } else {
-                    SnakeCell(snake_idx - self.width)
+                    SnakeCell(snake_idx - world_height)
                 }
             },
             Direction::Down => {
-                let treshold = snake_idx + ((self.width - row) * self.width);
-                if snake_idx + self.width == treshold {
-                    SnakeCell(treshold - ((row + 1) * self.width))
+                let treshold = snake_idx + ((world_height - row) * world_height);
+                if snake_idx + world_height == treshold {
+                    SnakeCell(treshold - ((row + 1) * world_height))
                 } else {
-                    SnakeCell(snake_idx + self.width)
+                    SnakeCell(snake_idx + world_height)
                 }
             },
         };
