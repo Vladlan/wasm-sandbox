@@ -36,7 +36,7 @@ extern "C" {
     pub fn error(s: &str);
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct SnakeCell(usize);
 
 struct Snake {
@@ -58,11 +58,13 @@ impl Snake {
         }
     }
 }
+
 #[wasm_bindgen]
 pub struct World {
     width: usize,
     size: usize,
     snake: Snake,
+    next_cell: Option<SnakeCell>,
 }
 
 #[wasm_bindgen]
@@ -72,6 +74,7 @@ impl World {
             width,
             size: width * width,
             snake: Snake::new(snake_start_index, 3),
+            next_cell: None,
         }
     }
 
@@ -86,6 +89,7 @@ impl World {
     pub fn change_snake_dir(&mut self, direction: Direction) {
         let next_cell = self.gen_next_snake_cell(&direction);
         if self.snake.body[1].0 == next_cell.0 { return; }
+        self.next_cell = Some(next_cell);
         self.snake.direction = direction;
     }
 
@@ -104,8 +108,16 @@ impl World {
 
     pub fn step(&mut self) {
         let temp_snake_body = self.snake.body.clone();
-        let next_position_of_head_cell = self.gen_next_snake_cell(&self.snake.direction);
-        self.snake.body[0] = next_position_of_head_cell;
+
+        match self.next_cell {
+            Some(cell) => {
+                self.snake.body[0] = cell;
+                self.next_cell = None;
+            },
+            None => {
+                self.snake.body[0] = self.gen_next_snake_cell(&self.snake.direction);
+            }
+        }
 
         let len: usize = self.snake.body.len();
 
