@@ -103,14 +103,14 @@ impl World {
     }
 
     pub fn step(&mut self) {
-        let temp = self.snake.body.clone();
-        let next_cell = self.gen_next_snake_cell(&self.snake.direction);
-        self.snake.body[0] = next_cell;
+        let temp_snake_body = self.snake.body.clone();
+        let next_position_of_head_cell = self.gen_next_snake_cell(&self.snake.direction);
+        self.snake.body[0] = next_position_of_head_cell;
 
-        let len = self.snake.body.len();
+        let len: usize = self.snake.body.len();
 
         for i in 1..len {
-            self.snake.body[i] = SnakeCell(temp[i - 1].0);
+            self.snake.body[i] = SnakeCell(temp_snake_body[i - 1].0);
         }
     }
 
@@ -152,18 +152,6 @@ impl World {
                 }
             },
         };
-    }
-
-    fn set_snake_head(&mut self, idx: usize) {
-        self.snake.body[0].0 = idx;
-    }
-
-    fn index_to_cell(&self, idx: usize) -> (usize, usize) {
-        (idx / self.width, idx % self.width)
-    }
-
-    fn cell_to_index(&self, row: usize, col: usize) -> usize {
-        (row * self.width) + col
     }
 }
 
