@@ -12,6 +12,11 @@ pub enum Direction {
     Right,
 }
 
+#[wasm_bindgen(module = "/www/utils/randomInt.js")]
+extern {
+    fn randomInt(max: usize) -> usize;
+}
+
 #[wasm_bindgen]
 pub fn greet(name: &str) {
     let name = format!("name: {}", name);
@@ -71,12 +76,23 @@ pub struct World {
 #[wasm_bindgen]
 impl World {
     pub fn new(width: usize, snake_start_index: usize) -> World {
+
+        let size = width * width;
+        let now = randomInt(size);
+        let reward_cell = now % size;
+
+        let log_now = format!("now: {}", now);
+        log(&log_now);
+
+        let log_reward_cell = format!("reward_cell: {}", reward_cell);
+        log(&log_reward_cell);
+
         World {
             width,
-            size: width * width,
+            size,
             snake: Snake::new(snake_start_index, 3),
             next_cell: None,
-            reward_cell: 10,
+            reward_cell,
         }
     }
 
@@ -137,6 +153,9 @@ impl World {
         let row = snake_idx / self.width;
         let world_height = self.width;
         let world_width = self.width;
+
+        let log_now = format!("world_width: {}", world_width);
+        log(&log_now);
 
         return match direction {
             Direction::Right => {

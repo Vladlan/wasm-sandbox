@@ -1,10 +1,11 @@
 import init, { greet, World, Direction, InitOutput } from "snake_game";
+import { randomInt } from "./utils/randomInt";
 
 const CELL_SIZE = 30;
 const WORLD_WIDTH = 16;
-const SNAKE_SPAWN_INDEX = Date.now() % (WORLD_WIDTH * WORLD_WIDTH);
+const SNAKE_SPAWN_INDEX = randomInt(WORLD_WIDTH * WORLD_WIDTH);
 
-init().then((wasm) => {
+init().then((wasm: InitOutput) => {
   // greet("V1234");
 
   console.log("SNAKE_SPAWN_INDEX: ", SNAKE_SPAWN_INDEX);
@@ -116,8 +117,6 @@ function drawSnake(
   wasm: InitOutput
 ) {
   const snakeCells = getSnakeCells(world, wasm);
-
-  console.log("snakeCells: ", snakeCells);
 
   snakeCells.forEach((cellIndex) => {
     drawSnakeCell(world, ctx, cellIndex);
