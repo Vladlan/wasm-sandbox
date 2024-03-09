@@ -1,8 +1,8 @@
 import init, { greet, World, Direction, InitOutput } from "snake_game";
 import { randomInt } from "./utils/randomInt";
 
-const CELL_SIZE = 30;
-const WORLD_WIDTH = 16;
+const CELL_SIZE = 40;
+const WORLD_WIDTH = 4;
 const SNAKE_SPAWN_INDEX = randomInt(WORLD_WIDTH * WORLD_WIDTH);
 
 init().then((wasm: InitOutput) => {
@@ -25,7 +25,7 @@ init().then((wasm: InitOutput) => {
       world.step();
       paint(canvas, world, wasm);
       requestAnimationFrame(gameLoop);
-    }, 100);
+    }, 300);
   }
   gameLoop();
 });
@@ -99,14 +99,14 @@ function drawRewardCell(world: World, ctx: CanvasRenderingContext2D) {
   ctx.stroke();
 } 
 
-function drawSnakeCell(world: World, ctx: CanvasRenderingContext2D, cellIndex: number) {
+function drawSnakeCell(world: World, ctx: CanvasRenderingContext2D, cellIndex: number, color = "black") {
   const worldWidth = world.width();
 
   const col = cellIndex % worldWidth;
   const row = Math.floor(cellIndex / worldWidth);
 
   ctx.beginPath();
-  ctx.fillStyle = "black";
+  ctx.fillStyle = color;
   ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
   ctx.stroke();
 }
@@ -118,9 +118,9 @@ function drawSnake(
 ) {
   const snakeCells = getSnakeCells(world, wasm);
 
-  snakeCells.forEach((cellIndex) => {
-    drawSnakeCell(world, ctx, cellIndex);
-  });
+  for (let i = snakeCells.length - 1; i >= 0; i--) {
+    drawSnakeCell(world, ctx, snakeCells[i], i === 0 ? "black" : "green");
+  }
 }
 
 

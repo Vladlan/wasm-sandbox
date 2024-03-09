@@ -152,8 +152,14 @@ impl World {
         }
 
         if self.reward_cell == self.snake_head_idx() {
+
+            if self.snake_length() < self.size {
+                self.reward_cell = World::get_reward_cell(self.size, &self.snake.body);
+            } else {
+                alert("You won!");
+            }
+
             self.snake.body.push(SnakeCell(self.snake.body[1].0));
-            self.reward_cell = World::get_reward_cell(self.size, &self.snake.body);
         }
     }
 
