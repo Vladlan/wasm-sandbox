@@ -41,7 +41,7 @@ extern "C" {
     pub fn error(s: &str);
 }
 
-#[derive(Clone, Copy)]
+#[derive(PartialEq, Clone, Copy)]
 pub struct SnakeCell(usize);
 
 struct Snake {
@@ -77,20 +77,19 @@ pub struct World {
 impl World {
     pub fn new(width: usize, snake_start_index: usize) -> World {
 
+        let snake = Snake::new(snake_start_index, 3);
         let size = width * width;
-        let now = randomInt(size);
-        let reward_cell = now % size;
+        let mut reward_cell;
 
-        let log_now = format!("now: {}", now);
-        log(&log_now);
-
-        let log_reward_cell = format!("reward_cell: {}", reward_cell);
-        log(&log_reward_cell);
+        loop {
+            reward_cell = randomInt(size);
+            if !snake.body.contains(&SnakeCell(reward_cell)) { break; }
+        }
 
         World {
             width,
             size,
-            snake: Snake::new(snake_start_index, 3),
+            snake,
             next_cell: None,
             reward_cell,
         }
