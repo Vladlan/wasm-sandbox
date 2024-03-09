@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "webpack-dev-server --config webpack.config.dev.js",
+    "dev:clean": "node scripts/delete-node-modules.js && yarn install && webpack-dev-server --config webpack.config.dev.js",
     "build": "webpack build --config webpack.config.build.js",
     "ts": "tsc --init"
   },
