@@ -3,15 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake WASM</title>
+    <title>WASM Snake</title>
 </head>
 <style>
+body {
+    font-family: Tahoma, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+}
 #snake-canvas {
     border: 1px solid black;
 }
+.flex {
+    display: flex;
+}
+
+.faiCenter {
+    align-items: center;
+}
+
+.buttons {
+    margin: 1rem auto 2rem auto;
+}
+.btn {
+    border: 1px solid black;
+    background-color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+.btnPrimary {
+    background-color: blue;
+    color: white;
+}
+.btnDanger {
+    background-color: red;
+    color: white;
+}
+.finalGameStatus {
+    font-size: 1rem;
+    font-weight: bold;
+}
+.textCenter {
+    text-align: center;
+}
 </style>
 <body>
-    <h1>Snake WASM</h1>
+    <h1>WASM Snake</h1>
+    <p id="final-game-status" class="finalGameStatus textCenter">
+        Prest "Start" to start the game
+    </p>
+    <div class="buttons flex faiCenter">
+        <button id="start-button" class="btn btnPrimary">Start</button>
+    </div>
     <div>
         <canvas id="snake-canvas"></canvas>
     </div>

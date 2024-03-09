@@ -4,6 +4,7 @@ import { randomInt } from "./utils/randomInt";
 const CELL_SIZE = 40;
 const WORLD_WIDTH = 4;
 const SNAKE_SPAWN_INDEX = randomInt(WORLD_WIDTH * WORLD_WIDTH);
+const START_BTN = <HTMLButtonElement>document.getElementById("start-button");
 
 init().then((wasm: InitOutput) => {
   // greet("V1234");
@@ -29,6 +30,22 @@ init().then((wasm: InitOutput) => {
   }
   gameLoop();
 });
+
+function drawGameStatus(world: World) {
+  const gameStatusDomElem = document.getElementById("final-game-status");
+  if (!gameStatusDomElem) return;
+  const gameStatusText = world.game_status_text();
+  if (gameStatusText) {
+    gameStatusDomElem.innerHTML = gameStatusText;
+  }
+  const gameStatus = world.game_status();
+  if (gameStatus === 2) {
+    START_BTN.textContent = "Restart";
+    START_BTN.addEventListener("click", () => {
+      window.location.reload();
+    });
+  }
+}
 
 function handleKeyboardEvent(world: World, event: KeyboardEvent) {
   switch (event.key) {
@@ -57,6 +74,10 @@ function initEventListeners(world: World) {
   document.addEventListener("keydown", (event) => {
     console.log("event.key: ", event.key);
     handleKeyboardEvent(world, event);
+  });
+  
+  START_BTN.addEventListener("click", () => {
+    world.start_game();
   });
 }
 
@@ -128,7 +149,8 @@ function paint(canvas: HTMLCanvasElement, world: World, wasm: InitOutput) {
   const ctx = canvas.getContext("2d")!;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawWorld(ctx, world);
   drawSnake(world, ctx, wasm);
   drawRewardCell(world, ctx);
+  drawWorld(ctx, world);
+  drawGameStatus(world);
 }
