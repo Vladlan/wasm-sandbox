@@ -220,9 +220,6 @@ impl World {
         let world_height = self.width;
         let world_width = self.width;
 
-        let log_now = format!("world_width: {}", world_width);
-        log(&log_now);
-
         return match direction {
             Direction::Right => {
                 let treshold = (row + 1) * world_width;
