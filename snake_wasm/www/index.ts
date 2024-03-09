@@ -86,6 +86,18 @@ function drawWorld(ctx: CanvasRenderingContext2D, world: World) {
   ctx.stroke();
 }
 
+function drawRewardCell(world: World, ctx: CanvasRenderingContext2D) {
+  const worldWidth = world.width();
+  const idx = world.reward_cell();
+  const col = idx % worldWidth;
+  const row = Math.floor(idx / worldWidth);
+
+  ctx.beginPath();
+  ctx.fillStyle = "red";
+  ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+  ctx.stroke();
+} 
+
 function drawSnakeCell(world: World, ctx: CanvasRenderingContext2D, cellIndex: number) {
   const worldWidth = world.width();
 
@@ -93,6 +105,7 @@ function drawSnakeCell(world: World, ctx: CanvasRenderingContext2D, cellIndex: n
   const row = Math.floor(cellIndex / worldWidth);
 
   ctx.beginPath();
+  ctx.fillStyle = "black";
   ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
   ctx.stroke();
 }
@@ -118,4 +131,5 @@ function paint(canvas: HTMLCanvasElement, world: World, wasm: InitOutput) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawWorld(ctx, world);
   drawSnake(world, ctx, wasm);
+  drawRewardCell(world, ctx);
 }
