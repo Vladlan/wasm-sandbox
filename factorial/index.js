@@ -1,5 +1,13 @@
-function factorial(x) {
-  return x < 1 ? 1 : x * factorial(x - 1);
+function factorial(n) {
+  if (!Number.isSafeInteger(n) || n < 0) {
+    throw new RangeError("n must be a non-negative safe integer");
+  }
+
+  let result = 1n;
+  for (let value = 2; value <= n; value++) {
+    result *= BigInt(value);
+  }
+  return result;
 }
 
 const startTime = performance.now();

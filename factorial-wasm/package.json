@@ -1,0 +1,10 @@
+{
+  "name": "factorial-wasm-benchmark",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Exact factorial benchmark for JavaScript BigInt and Rust WebAssembly",
+  "scripts": {
+    "dev": "node server.js",
+    "build": "cargo build --release --target wasm32-unknown-unknown && node -e \"require('fs').copyFileSync('target/wasm32-unknown-unknown/release/factorial_wasm.wasm', 'factorial.wasm')\""
+  }
+}

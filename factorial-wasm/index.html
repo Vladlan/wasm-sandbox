@@ -1,19 +1,399 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Factorial WASM</title>
-    <style>
-        canvas {
-          border: 1px solid #000;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Factorial: JavaScript vs WebAssembly</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #091019;
+      color: #e7edf5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(40, 116, 166, 0.2), transparent 35rem),
+        radial-gradient(circle at 90% 20%, rgba(117, 76, 184, 0.14), transparent 32rem),
+        #091019;
+    }
+
+    main {
+      width: min(1000px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 64px 0;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: #75d9c1;
+      font-size: 0.75rem;
+      font-weight: 750;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 760px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.8rem);
+      line-height: 1.05;
+      letter-spacing: -0.045em;
+    }
+
+    .intro {
+      max-width: 700px;
+      margin: 20px 0 32px;
+      color: #9fadc0;
+      line-height: 1.65;
+    }
+
+    .panel {
+      padding: 24px;
+      border: 1px solid #243245;
+      border-radius: 18px;
+      background: rgba(15, 25, 38, 0.88);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: minmax(140px, 1fr) minmax(140px, 1fr) auto;
+      gap: 16px;
+      align-items: end;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      color: #afbdd0;
+      font-size: 0.85rem;
+      font-weight: 650;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #33445a;
+      border-radius: 10px;
+      outline: none;
+      background: #0a131f;
+      color: #f3f7fb;
+      font: inherit;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input:focus { border-color: #75d9c1; box-shadow: 0 0 0 3px rgba(117, 217, 193, 0.12); }
+
+    button {
+      min-height: 46px;
+      padding: 0 22px;
+      border: 0;
+      border-radius: 10px;
+      background: #75d9c1;
+      color: #08231d;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 800;
+    }
+
+    button:hover { background: #91e5d1; }
+    button:disabled { cursor: wait; opacity: 0.55; }
+
+    #status {
+      min-height: 24px;
+      margin: 16px 0 0;
+      color: #9fadc0;
+      font-size: 0.9rem;
+    }
+
+    #status.error { color: #ff9d9d; }
+    #status.success { color: #75d9c1; }
+
+    #results { display: none; margin-top: 24px; }
+
+    .verdict {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      align-items: baseline;
+      margin-bottom: 20px;
+    }
+
+    .verdict strong { font-size: 1.3rem; }
+    .verdict span { color: #9fadc0; }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-variant-numeric: tabular-nums;
+    }
+
+    th, td {
+      padding: 16px;
+      border-bottom: 1px solid #243245;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+    th { color: #8e9db1; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; }
+    td { color: #dce5ef; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr.winner { background: rgba(117, 217, 193, 0.06); }
+    tbody tr.winner td:first-child { color: #75d9c1; }
+
+    .variant { display: flex; align-items: center; gap: 10px; font-weight: 750; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: #8aa9ff; }
+    .dot.wasm { background: #c39aff; }
+
+    .note {
+      margin: 18px 0 0;
+      color: #7f8da1;
+      font-size: 0.8rem;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 680px) {
+      main { padding: 36px 0; }
+      form { grid-template-columns: 1fr 1fr; }
+      button { grid-column: 1 / -1; }
+      .panel { padding: 18px; }
+      th, td { padding: 13px 10px; }
+    }
+  </style>
 </head>
 <body>
-    <h1>Factorial WASM</h1>
+  <main>
+    <p class="eyebrow">Exact arithmetic benchmark</p>
+    <h1>JavaScript vs Rust WebAssembly</h1>
+    <p class="intro">
+      Calculate <strong>n!</strong> with arbitrary precision in both engines, then compare
+      repeated timings. Both variants return the exact result as a decimal string.
+    </p>
+
+    <section class="panel" aria-label="Benchmark controls">
+      <form id="benchmark-form">
+        <label>
+          Factorial input (n)
+          <input id="n" type="number" min="0" max="20000" step="1" value="1000" required>
+        </label>
+        <label>
+          Timed runs per variant
+          <input id="runs" type="number" min="1" max="100" step="1" value="10" required>
+        </label>
+        <button id="run" type="submit" disabled>Loading WASM…</button>
+      </form>
+      <p id="status" role="status" aria-live="polite">Preparing the WebAssembly module.</p>
+    </section>
+
+    <section id="results" class="panel" aria-label="Benchmark results">
+      <div class="verdict">
+        <strong id="verdict"></strong>
+        <span id="correctness"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Variant</th>
+              <th>Average</th>
+              <th>Median</th>
+              <th>Best</th>
+              <th>Relative</th>
+              <th>Result digits</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr id="js-row">
+              <td><span class="variant"><span class="dot"></span>JavaScript BigInt</span></td>
+              <td id="js-average"></td>
+              <td id="js-median"></td>
+              <td id="js-best"></td>
+              <td id="js-relative"></td>
+              <td id="js-digits"></td>
+            </tr>
+            <tr id="wasm-row">
+              <td><span class="variant"><span class="dot wasm"></span>Rust → WASM</span></td>
+              <td id="wasm-average"></td>
+              <td id="wasm-median"></td>
+              <td id="wasm-best"></td>
+              <td id="wasm-relative"></td>
+              <td id="wasm-digits"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">
+        Lower times are better. One warm-up run per variant is excluded. Timed runs alternate
+        execution order to reduce ordering bias. Both timings include producing a decimal string;
+        WASM timing also includes UTF-8 decoding and memory cleanup. Browser timings are indicative,
+        not a controlled microbenchmark.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    function javascriptFactorial(n) {
+      let result = 1n;
+      for (let value = 2; value <= n; value++) {
+        result *= BigInt(value);
+      }
+      return result.toString();
+    }
+
+    function createWasmFactorial(instance) {
+      const { memory, fac, fac_free } = instance.exports;
+      const decoder = new TextDecoder();
+
+      return (n) => {
+        const packed = fac(n);
+        try {
+          const pointer = Number(packed & 0xffffffffn);
+          const length = Number(packed >> 32n);
+          const bytes = new Uint8Array(memory.buffer, pointer, length);
+          return decoder.decode(bytes);
+        } finally {
+          fac_free(packed);
+        }
+      };
+    }
+
+    const form = document.querySelector("#benchmark-form");
+    const button = document.querySelector("#run");
+    const status = document.querySelector("#status");
+    const results = document.querySelector("#results");
+    let wasmFactorial;
+
+    function measure(factorial, n) {
+      const start = performance.now();
+      const result = factorial(n);
+      return { elapsed: performance.now() - start, result };
+    }
+
+    function average(values) {
+      return values.reduce((sum, value) => sum + value, 0) / values.length;
+    }
+
+    function median(values) {
+      const sorted = [...values].sort((a, b) => a - b);
+      const middle = Math.floor(sorted.length / 2);
+      return sorted.length % 2
+        ? sorted[middle]
+        : (sorted[middle - 1] + sorted[middle]) / 2;
+    }
+
+    function formatTime(milliseconds) {
+      return `${milliseconds < 10 ? milliseconds.toFixed(3) : milliseconds.toFixed(2)} ms`;
+    }
+
+    function setStatus(message, type = "") {
+      status.textContent = message;
+      status.className = type;
+    }
+
+    function displayResults(n, timings, digitCount) {
+      const jsAverage = average(timings.javascript);
+      const wasmAverage = average(timings.webassembly);
+      const javascriptWon = jsAverage <= wasmAverage;
+      const fastAverage = Math.min(jsAverage, wasmAverage);
+      const ratio = Math.max(jsAverage, wasmAverage) / fastAverage;
+
+      for (const [key, values, avg] of [
+        ["js", timings.javascript, jsAverage],
+        ["wasm", timings.webassembly, wasmAverage],
+      ]) {
+        document.querySelector(`#${key}-average`).textContent = formatTime(avg);
+        document.querySelector(`#${key}-median`).textContent = formatTime(median(values));
+        document.querySelector(`#${key}-best`).textContent = formatTime(Math.min(...values));
+        document.querySelector(`#${key}-relative`).textContent = avg === fastAverage
+          ? "Fastest"
+          : `${(avg / fastAverage).toFixed(2)}× slower`;
+        document.querySelector(`#${key}-digits`).textContent = digitCount.toLocaleString();
+      }
+
+      document.querySelector("#js-row").classList.toggle("winner", javascriptWon);
+      document.querySelector("#wasm-row").classList.toggle("winner", !javascriptWon);
+      document.querySelector("#verdict").textContent = ratio < 1.01
+        ? "Essentially tied"
+        : `${javascriptWon ? "JavaScript" : "WebAssembly"} is ${ratio.toFixed(2)}× faster`;
+      document.querySelector("#correctness").textContent =
+        `✓ Both produced the same exact ${n}! result (${digitCount.toLocaleString()} digits).`;
+      results.style.display = "block";
+    }
+
+    async function runBenchmark(event) {
+      event.preventDefault();
+      const n = Number(document.querySelector("#n").value);
+      const runCount = Number(document.querySelector("#runs").value);
+
+      if (!Number.isInteger(n) || n < 0 || n > 20000 ||
+          !Number.isInteger(runCount) || runCount < 1 || runCount > 100) {
+        setStatus("Enter n from 0 to 20,000 and a run count from 1 to 100.", "error");
+        return;
+      }
+
+      button.disabled = true;
+      results.style.display = "none";
+
+      try {
+        setStatus("Warming up and checking correctness…");
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const jsWarmup = javascriptFactorial(n);
+        const wasmWarmup = wasmFactorial(n);
+        if (jsWarmup !== wasmWarmup) {
+          throw new Error("Correctness check failed: the factorial results differ.");
+        }
+        const digitCount = jsWarmup.toString().length;
+
+        const timings = { javascript: [], webassembly: [] };
+        for (let run = 0; run < runCount; run++) {
+          setStatus(`Running iteration ${run + 1} of ${runCount}…`);
+          await new Promise(resolve => setTimeout(resolve, 0));
+
+          if (run % 2 === 0) {
+            timings.javascript.push(measure(javascriptFactorial, n).elapsed);
+            timings.webassembly.push(measure(wasmFactorial, n).elapsed);
+          } else {
+            timings.webassembly.push(measure(wasmFactorial, n).elapsed);
+            timings.javascript.push(measure(javascriptFactorial, n).elapsed);
+          }
+        }
+
+        displayResults(n, timings, digitCount);
+        setStatus(`Completed ${runCount} timed runs per variant.`, "success");
+      } catch (error) {
+        setStatus(error.message, "error");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Run benchmark";
+      }
+    }
+
+    async function initialize() {
+      try {
+        const response = await fetch("factorial.wasm");
+        if (!response.ok) throw new Error(`Could not load factorial.wasm (${response.status}).`);
+        const { instance } = await WebAssembly.instantiateStreaming(response);
+        wasmFactorial = createWasmFactorial(instance);
+        button.disabled = false;
+        button.textContent = "Run benchmark";
+        setStatus("Ready. Both variants use exact arbitrary-precision arithmetic.");
+      } catch (error) {
+        setStatus(error.message, "error");
+        button.textContent = "WASM unavailable";
+      }
+    }
+
+    form.addEventListener("submit", runBenchmark);
+    initialize();
+  </script>
 </body>
-<script src="./../utils/insertResultInTheBody.js"></script>
-<script src="./../utils/delimitThousands.js"></script>
-<script src="index.js"></script>
 </html>

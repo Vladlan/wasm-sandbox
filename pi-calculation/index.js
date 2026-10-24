@@ -23,7 +23,7 @@ calculatePiAndDraw(
   rectangleHeight,
   circleX,
   circleY,
-  circleRadius
+  circleRadius,
 );
 const imgDataArr = calculatePiWithDrawing(
   rectangleX,
@@ -32,7 +32,7 @@ const imgDataArr = calculatePiWithDrawing(
   rectangleHeight,
   circleX,
   circleY,
-  circleRadius
+  circleRadius,
 );
 
 const imgData = ctx2.createImageData(rectangleHeight, rectangleWidth);
